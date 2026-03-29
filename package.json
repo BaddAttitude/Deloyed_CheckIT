@@ -1,0 +1,44 @@
+{
+  "name": "checkitapp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^0.10.34",
+    "@prisma/adapter-better-sqlite3": "^7.5.0",
+    "@prisma/client": "^7.5.0",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.8.0",
+    "face-api.js": "^0.22.2",
+    "framer-motion": "^12.38.0",
+    "next": "16.2.1",
+    "next-auth": "^5.0.0-beta.30",
+    "onnxruntime-node": "^1.24.3",
+    "onnxruntime-web": "^1.24.3",
+    "prisma": "^7.5.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-webcam": "^7.2.0",
+    "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "@auth/prisma-adapter": "^2.11.1",
+    "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/react-webcam": "^1.1.0",
+    "dotenv": "^17.3.1",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

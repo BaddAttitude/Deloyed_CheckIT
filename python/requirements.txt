@@ -1,0 +1,10 @@
+# CheckIt — Python facial verification dependencies
+# Install with:  pip install -r requirements.txt
+
+opencv-python>=4.9.0
+mediapipe>=0.10.0
+deepface>=0.0.93
+numpy>=1.24.0
+
+# DeepFace will auto-download model weights (~100–200 MB) on first run.
+# Supported --model values: Facenet512 (default), ArcFace, VGG-Face, Facenet
