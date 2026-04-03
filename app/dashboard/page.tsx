@@ -10,8 +10,9 @@ export default async function DashboardPage() {
   const session = await auth()
   if (!session?.user?.id) redirect("/login")
 
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000)
   const verifications = await prisma.verification.findMany({
-    where: { userId: session.user.id },
+    where: { userId: session.user.id, createdAt: { gte: since } },
     orderBy: { createdAt: "desc" },
     take: 20,
   })
@@ -112,7 +113,7 @@ export default async function DashboardPage() {
         {total > 0 && (
           <div className="bg-[#1e293b] border border-[#334155] rounded-2xl overflow-hidden">
             <div className="px-4 py-3.5 border-b border-[#334155] flex items-center justify-between">
-              <h2 className="text-white font-semibold text-sm">Recent Verifications</h2>
+              <h2 className="text-white font-semibold text-sm">Recent Verifications for Shift</h2>
               <Link
                 href="/verify"
                 className="text-[#3b82f6] hover:text-[#60a5fa] text-sm font-medium transition-colors"

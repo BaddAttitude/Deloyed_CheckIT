@@ -1,7 +1,7 @@
 FROM node:20-bullseye-slim
 
 # Tools needed to compile native modules (better-sqlite3, onnxruntime-node)
-RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y python3 make g++ unzip && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

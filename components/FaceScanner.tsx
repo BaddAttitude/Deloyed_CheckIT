@@ -84,6 +84,7 @@ export default function FaceScanner({ onCapture, onError }: FaceScannerProps) {
   const webcamRef        = useRef<Webcam>(null)
   const canvasRef        = useRef<HTMLCanvasElement>(null)
   const intervalRef      = useRef<ReturnType<typeof setInterval> | null>(null)
+  const rafRef           = useRef<number>(0)
   const capturedRef      = useRef(false)
   const stableRef        = useRef(0)
   const mpRef            = useRef<FaceLandmarkerResult | null>(null)
@@ -105,6 +106,23 @@ export default function FaceScanner({ onCapture, onError }: FaceScannerProps) {
         if (!active) return
         mpRef.current = mp
         setStatus("scanning")
+
+        // rAF loop: redraws the mesh at 60fps from the last known landmarks.
+        // Detection still runs at 300ms via setInterval — no accuracy change.
+        const drawLoop = () => {
+          if (!active) return
+          const canvas = canvasRef.current
+          if (canvas) {
+            const lms = lastLandmarksRef.current
+            if (lms) {
+              drawMediaPipeMesh(canvas, lms, mp.connections, true)
+            } else {
+              canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height)
+            }
+          }
+          rafRef.current = requestAnimationFrame(drawLoop)
+        }
+        rafRef.current = requestAnimationFrame(drawLoop)
 
         intervalRef.current = setInterval(() => {
           if (!active || capturedRef.current) return
@@ -129,11 +147,10 @@ export default function FaceScanner({ onCapture, onError }: FaceScannerProps) {
           catch { return }
 
           const faceLms = result.faceLandmarks?.[0]
-          const ctx     = canvas.getContext("2d")
 
           // ── 1. No face ──────────────────────────────────────────────────────
           if (!faceLms?.length) {
-            ctx?.clearRect(0, 0, W, H)
+            lastLandmarksRef.current = null
             stableRef.current = 0; setStableFrames(0); setStatus("scanning")
             return
           }
@@ -141,28 +158,27 @@ export default function FaceScanner({ onCapture, onError }: FaceScannerProps) {
           // ── 2. Oval containment check ───────────────────────────────────────
           const box = getBoundingBox(faceLms, W, H)
           if (!isFaceInOval(box, W, H)) {
-            ctx?.clearRect(0, 0, W, H)
+            lastLandmarksRef.current = null
             stableRef.current = 0; setStableFrames(0); setStatus("scanning")
             return
           }
 
           // ── 3. Proximity check ─────────────────────────────────────────────
           if (box.height < MIN_FACE_HEIGHT) {
-            ctx?.clearRect(0, 0, W, H)
+            lastLandmarksRef.current = null
             stableRef.current = 0; setStableFrames(0); setStatus("tooFar")
             return
           }
 
           // ── 4. Frontal-face check ───────────────────────────────────────────
           if (!isFaceFrontal(faceLms)) {
-            ctx?.clearRect(0, 0, W, H)
+            lastLandmarksRef.current = null
             stableRef.current = 0; setStableFrames(0); setStatus("tilted")
             return
           }
 
-          // ── 5. Draw 468-pt mesh overlay ─────────────────────────────────────
-          drawMediaPipeMesh(canvas, faceLms, mp.connections, true)
-          lastLandmarksRef.current = faceLms   // save for capture step
+          // ── 5. Update landmarks — rAF loop draws at 60fps ───────────────────
+          lastLandmarksRef.current = faceLms
 
           // ── 6. Count stability ──────────────────────────────────────────────
           stableRef.current = Math.min(stableRef.current + 1, STABLE_NEEDED)
@@ -232,6 +248,7 @@ export default function FaceScanner({ onCapture, onError }: FaceScannerProps) {
     return () => {
       active = false
       if (intervalRef.current) clearInterval(intervalRef.current)
+      cancelAnimationFrame(rafRef.current)
     }
   }, [])
 

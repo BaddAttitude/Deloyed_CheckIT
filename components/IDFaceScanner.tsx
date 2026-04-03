@@ -81,6 +81,7 @@ export default function IDFaceScanner({ onCapture, onError }: Props) {
   const webcamRef        = useRef<Webcam>(null)
   const canvasRef        = useRef<HTMLCanvasElement>(null)
   const intervalRef      = useRef<ReturnType<typeof setInterval> | null>(null)
+  const rafRef           = useRef<number>(0)
   const capturedRef      = useRef(false)
   const stableRef        = useRef(0)
   const mpRef            = useRef<FaceLandmarkerResult | null>(null)
@@ -102,6 +103,23 @@ export default function IDFaceScanner({ onCapture, onError }: Props) {
         if (!active) return
         mpRef.current = mp
         setStatus("scanning")
+
+        // rAF loop: redraws the mesh at 60fps from the last known landmarks.
+        // Detection still runs at 300ms via setInterval — no accuracy change.
+        const drawLoop = () => {
+          if (!active) return
+          const canvas = canvasRef.current
+          if (canvas) {
+            const lms = lastLandmarksRef.current
+            if (lms) {
+              drawMediaPipeMesh(canvas, lms, mp.connections, false)
+            } else {
+              canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height)
+            }
+          }
+          rafRef.current = requestAnimationFrame(drawLoop)
+        }
+        rafRef.current = requestAnimationFrame(drawLoop)
 
         intervalRef.current = setInterval(() => {
           if (!active || capturedRef.current) return
@@ -125,34 +143,32 @@ export default function IDFaceScanner({ onCapture, onError }: Props) {
           catch { return }
 
           const faceLms = result.faceLandmarks?.[0]
-          const ctx     = canvas.getContext("2d")
 
           if (!faceLms?.length) {
-            ctx?.clearRect(0, 0, W, H)
+            lastLandmarksRef.current = null
             stableRef.current = 0; setStableFrames(0); setStatus("scanning")
             return
           }
 
           const box = getBoundingBox(faceLms, W, H)
           if (!isFaceInOval(box, W, H)) {
-            ctx?.clearRect(0, 0, W, H)
+            lastLandmarksRef.current = null
             stableRef.current = 0; setStableFrames(0); setStatus("scanning")
             return
           }
 
           if (box.height < MIN_FACE_HEIGHT) {
-            ctx?.clearRect(0, 0, W, H)
+            lastLandmarksRef.current = null
             stableRef.current = 0; setStableFrames(0); setStatus("tooFar")
             return
           }
 
           if (!isFaceFrontal(faceLms)) {
-            ctx?.clearRect(0, 0, W, H)
+            lastLandmarksRef.current = null
             stableRef.current = 0; setStableFrames(0); setStatus("tilted")
             return
           }
 
-          drawMediaPipeMesh(canvas, faceLms, mp.connections, false)
           lastLandmarksRef.current = faceLms
 
           stableRef.current = Math.min(stableRef.current + 1, STABLE_NEEDED)
@@ -221,6 +237,7 @@ export default function IDFaceScanner({ onCapture, onError }: Props) {
     return () => {
       active = false
       if (intervalRef.current) clearInterval(intervalRef.current)
+      cancelAnimationFrame(rafRef.current)
     }
   }, [])
 

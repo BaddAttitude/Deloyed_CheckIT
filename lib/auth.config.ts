@@ -2,6 +2,7 @@ import type { NextAuthConfig } from "next-auth"
 
 // Lightweight auth config — no Prisma, safe for Edge Runtime (proxy.ts)
 export const authConfig: NextAuthConfig = {
+  trustHost: true,
   pages: {
     signIn: "/login",
   },
