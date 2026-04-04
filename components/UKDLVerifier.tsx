@@ -201,7 +201,7 @@ export default function UKDLVerifier({ imageSrc, onComplete, onRetry }: Props) {
         </div>
         <div className="flex flex-col gap-2.5 w-full max-w-xs">
           {(["ocr", "algorithm"] as Stage[]).map((s) => {
-            const done  = stage === "algorithm" && s === "ocr" || stage === "done"
+            const done  = s === "ocr" && stage === "algorithm"
             const label = s === "ocr" ? "OCR scan" : "Algorithm check"
             return (
               <div key={s} className="flex items-center gap-3 text-sm">
