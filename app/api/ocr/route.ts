@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createWorker } from "tesseract.js"
-import path from "path"
 
-// Force Node.js runtime — Tesseract.js workers require worker_threads
+// Force Node.js runtime
 export const runtime = "nodejs"
 
-// process.cwd() is evaluated at runtime (not replaced by Turbopack bundler),
-// so it correctly resolves to the project root on Windows.
-const PROJECT_ROOT  = process.cwd()
-const WORKER_SCRIPT = path.join(PROJECT_ROOT, "node_modules", "tesseract.js", "src", "worker-script", "node", "index.js")
-const LANG_CACHE    = path.join(PROJECT_ROOT, ".tessdata")   // language model cached here after first download
+const OCR_ENDPOINT = "https://api.ocr.space/parse/base64"
 
 export async function POST(req: NextRequest) {
   let imageData: string
@@ -21,20 +15,48 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
   }
 
-  let worker
   try {
-    worker = await createWorker("eng", 1, {
-      workerPath:  WORKER_SCRIPT,
-      langPath:    LANG_CACHE,
-      cacheMethod: "write",       // download once, reuse from disk
+    // Ensure data URI prefix is present
+    const base64Image = imageData.startsWith("data:")
+      ? imageData
+      : `data:image/jpeg;base64,${imageData}`
+
+    const params = new URLSearchParams({
+      base64Image,
+      language:           "eng",
+      OCREngine:          "2",     // OCR.space engine 2 — best for typed documents / ID cards
+      scale:              "true",  // auto-scale small text up before OCR
+      isOverlayRequired:  "false",
+      detectOrientation:  "true",  // auto-rotate if needed
+      isTable:            "false",
     })
-    const { data: { text } } = await worker.recognize(imageData)
-    await worker.terminate()
-    return NextResponse.json({ text: text ?? "" })
-  } catch (err) {
-    if (worker) {
-      try { await worker.terminate() } catch { /* ignore */ }
+
+    const res = await fetch(OCR_ENDPOINT, {
+      method:  "POST",
+      headers: {
+        apikey:          process.env.OCR_SPACE_KEY ?? "helloworld",
+        "Content-Type":  "application/x-www-form-urlencoded",
+      },
+      body:   params.toString(),
+      signal: AbortSignal.timeout(30_000),
+    })
+
+    if (!res.ok) throw new Error(`OCR.space responded with ${res.status}`)
+
+    const json = await res.json() as {
+      IsErroredOnProcessing: boolean
+      ErrorMessage?:         string[]
+      ParsedResults?:        Array<{ ParsedText: string; FileParseExitCode: number }>
     }
+
+    if (json.IsErroredOnProcessing) {
+      throw new Error(json.ErrorMessage?.[0] ?? "OCR processing failed")
+    }
+
+    const text = json.ParsedResults?.[0]?.ParsedText ?? ""
+    return NextResponse.json({ text })
+
+  } catch (err) {
     console.error("[OCR] error:", err)
     return NextResponse.json({ text: "", error: String(err) }, { status: 200 })
   }
