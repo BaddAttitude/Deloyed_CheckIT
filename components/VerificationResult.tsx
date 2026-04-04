@@ -157,6 +157,12 @@ export default function VerificationResult({
                 <span className="text-white text-sm font-medium">{ocrData.dateOfBirth}</span>
               </div>
             )}
+            {ocrData.issueDate && (
+              <div className="px-4 py-3 flex items-center justify-between gap-3">
+                <span className="text-[#94a3b8] text-xs flex-shrink-0">Issue Date</span>
+                <span className="text-white text-sm font-medium">{ocrData.issueDate}</span>
+              </div>
+            )}
             {ocrData.expiryDate && (
               <div className="px-4 py-3 flex items-center justify-between gap-3">
                 <span className="text-[#94a3b8] text-xs flex-shrink-0">Expiry Date</span>

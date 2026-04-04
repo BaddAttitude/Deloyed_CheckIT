@@ -14,6 +14,7 @@ export interface ExtractedIDData {
   firstName:      string | null
   middleName:     string | null
   licenceNumber:  string | null
+  issueDate:      string | null
 }
 
 // ── Month lookup ─────────────────────────────────────────────────────────────
@@ -150,6 +151,7 @@ export async function extractIDData(imageSrc: string): Promise<ExtractedIDData> 
     firstName:      null,
     middleName:     null,
     licenceNumber:  null,
+    issueDate:      null,
   }
 
   try {
@@ -182,27 +184,61 @@ export async function extractIDData(imageSrc: string): Promise<ExtractedIDData> 
     }
 
     // ── UK Driving Licence — individual name fields + licence number ──────────
-    // Try DVLA numeric field labels ("1. GODDEY", "2. GODSTIME ONYEKA", "4d. GODDE...")
+    // Titles to strip from field 2 (e.g. "2. MR ONYEKA GODSTIME" → ONYEKA / GODSTIME)
+    const TITLES = new Set(["MR", "MRS", "MS", "MISS", "DR", "PROF", "REV", "SIR", "LADY"])
+
+    // Try DVLA numeric field labels ("1. GODDEY", "2. MR ONYEKA GODSTIME", "4d/5. GODDE...")
     for (const line of lines) {
       const ul = line.toUpperCase()
 
+      // Field 1 → Surname
       if (!result.surname) {
-        const m = ul.match(/^1\s*[.]\s*([A-Z][A-Z\-]+)$/)
-        if (m) result.surname = titleCase(m[1])
+        const m = ul.match(/^1\s*[.]\s*([A-Z][A-Z\-]+)/)
+        if (m) result.surname = titleCase(m[1].trim())
       }
 
+      // Field 2 → Given names (strip title prefix like MR, MRS, etc.)
       if (!result.firstName) {
-        const m = ul.match(/^2\s*[.]\s*([A-Z][A-Z\- ]+)$/)
+        const m = ul.match(/^2\s*[.]\s*(.+)/)
         if (m) {
-          const parts = m[1].trim().split(/\s+/)
-          result.firstName  = titleCase(parts[0])
-          result.middleName = parts.length > 1 ? titleCase(parts.slice(1).join(" ")) : null
+          const words = m[1].trim().split(/\s+/).filter(Boolean)
+          if (TITLES.has(words[0])) words.shift()          // remove title
+          result.firstName  = titleCase(words[0] ?? "")
+          result.middleName = words.length > 1 ? titleCase(words.slice(1).join(" ")) : null
         }
       }
 
+      // Field 4d OR field 5 → Licence number (card version-dependent label)
       if (!result.licenceNumber) {
-        const m = ul.match(/(?:^4D\s*[.]\s*)?([A-Z]{5}[0-9]{6}[A-Z]{2}[0-9][A-Z]{2})$/)
+        const m = ul.match(/^(?:4D|5)\s*[.]\s*([A-Z]{5}[0-9]{6}[A-Z]{2}[0-9][A-Z]{2})/)
         if (m) result.licenceNumber = m[1]
+      }
+
+      // Standalone 16-char DL number on its own line
+      if (!result.licenceNumber) {
+        const m = ul.match(/^([A-Z]{5}[0-9]{6}[A-Z]{2}[0-9][A-Z]{2})\b/)
+        if (m) result.licenceNumber = m[1]
+      }
+
+      // Field 4a → Issue date
+      if (!result.issueDate) {
+        const m = ul.match(/^4A\s*[.]\s*(\d{1,2}[.\-\/]\d{1,2}[.\-\/]\d{4})/)
+        if (m) {
+          const d = parseDate(m[1])
+          if (d) result.issueDate = fmt(d)
+        }
+      }
+
+      // Field 4b → Expiry date (overrides any earlier generic match for accuracy)
+      {
+        const m = ul.match(/^4B\s*[.]\s*(\d{1,2}[.\-\/]\d{1,2}[.\-\/]\d{4})/)
+        if (m) {
+          const d = parseDate(m[1])
+          if (d) {
+            result.expiryDate = fmt(d)
+            result.isExpired  = d < new Date()
+          }
+        }
       }
     }
 
@@ -211,12 +247,13 @@ export async function extractIDData(imageSrc: string): Promise<ExtractedIDData> 
       result.surname = titleCase(nameMatch[1].trim().split(/\s{2,}/)[0])
     }
     if (!result.firstName && givenMatch) {
-      const parts = givenMatch[1].trim().split(/\s+/).filter(Boolean)
-      result.firstName  = titleCase(parts[0] ?? "")
-      result.middleName = parts.length > 1 ? titleCase(parts.slice(1).join(" ")) : null
+      const words = givenMatch[1].trim().split(/\s+/).filter(Boolean)
+      if (TITLES.has(words[0]?.toUpperCase())) words.shift()
+      result.firstName  = titleCase(words[0] ?? "")
+      result.middleName = words.length > 1 ? titleCase(words.slice(1).join(" ")) : null
     }
 
-    // Fallback: scan full text for standalone 16-char DL number
+    // Fallback: scan full text for 16-char DL number anywhere
     if (!result.licenceNumber) {
       const m = upper.match(/\b([A-Z]{5}[0-9]{6}[A-Z]{2}[0-9][A-Z]{2})\b/)
       if (m) result.licenceNumber = m[1]
