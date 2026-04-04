@@ -1,6 +1,6 @@
 "use client"
 
-import type { PatternCheckResult } from "@/lib/id-pattern-verifier"
+import type { PatternCheckResult } from "@/lib/check-types"
 import type { ExtractedIDData } from "@/lib/id-ocr"
 
 interface VerificationResultProps {

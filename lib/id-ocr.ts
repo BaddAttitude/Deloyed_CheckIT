@@ -9,6 +9,11 @@ export interface ExtractedIDData {
   mrzValid:       boolean | null   // null = no MRZ detected
   rawText:        string | null    // first ~600 chars of OCR output
   ocrFailed:      boolean          // true = OCR failed to run
+  // UK Driving Licence specific fields
+  surname:        string | null
+  firstName:      string | null
+  middleName:     string | null
+  licenceNumber:  string | null
 }
 
 // ── Month lookup ─────────────────────────────────────────────────────────────
@@ -141,6 +146,10 @@ export async function extractIDData(imageSrc: string): Promise<ExtractedIDData> 
     mrzValid:       null,
     rawText:        null,
     ocrFailed:      false,
+    surname:        null,
+    firstName:      null,
+    middleName:     null,
+    licenceNumber:  null,
   }
 
   try {
@@ -170,6 +179,53 @@ export async function extractIDData(imageSrc: string): Promise<ExtractedIDData> 
       result.fullName = `${given} ${sur}`.trim()
     } else if (nameMatch) {
       result.fullName = titleCase(nameMatch[1].trim().split(/\s{2,}/)[0])
+    }
+
+    // ── UK Driving Licence — individual name fields + licence number ──────────
+    // Try DVLA numeric field labels ("1. GODDEY", "2. GODSTIME ONYEKA", "4d. GODDE...")
+    for (const line of lines) {
+      const ul = line.toUpperCase()
+
+      if (!result.surname) {
+        const m = ul.match(/^1\s*[.]\s*([A-Z][A-Z\-]+)$/)
+        if (m) result.surname = titleCase(m[1])
+      }
+
+      if (!result.firstName) {
+        const m = ul.match(/^2\s*[.]\s*([A-Z][A-Z\- ]+)$/)
+        if (m) {
+          const parts = m[1].trim().split(/\s+/)
+          result.firstName  = titleCase(parts[0])
+          result.middleName = parts.length > 1 ? titleCase(parts.slice(1).join(" ")) : null
+        }
+      }
+
+      if (!result.licenceNumber) {
+        const m = ul.match(/(?:^4D\s*[.]\s*)?([A-Z]{5}[0-9]{6}[A-Z]{2}[0-9][A-Z]{2})$/)
+        if (m) result.licenceNumber = m[1]
+      }
+    }
+
+    // Fallback: populate surname/given names from generic label matches
+    if (!result.surname && nameMatch) {
+      result.surname = titleCase(nameMatch[1].trim().split(/\s{2,}/)[0])
+    }
+    if (!result.firstName && givenMatch) {
+      const parts = givenMatch[1].trim().split(/\s+/).filter(Boolean)
+      result.firstName  = titleCase(parts[0] ?? "")
+      result.middleName = parts.length > 1 ? titleCase(parts.slice(1).join(" ")) : null
+    }
+
+    // Fallback: scan full text for standalone 16-char DL number
+    if (!result.licenceNumber) {
+      const m = upper.match(/\b([A-Z]{5}[0-9]{6}[A-Z]{2}[0-9][A-Z]{2})\b/)
+      if (m) result.licenceNumber = m[1]
+    }
+
+    // Derive fullName from DL fields if not already found
+    if (!result.fullName && result.firstName && result.surname) {
+      const mid = result.middleName ? ` ${result.middleName}` : ""
+      result.fullName = `${result.firstName}${mid} ${result.surname}`
     }
 
     // ── Document Number ───────────────────────────────────────────────────────
@@ -273,6 +329,11 @@ export async function extractIDData(imageSrc: string): Promise<ExtractedIDData> 
         // ── MRZ checksum validation ───────────────────────────────────────────
         result.mrzValid = validateMrzLine2(line2)
       }
+    }
+
+    // Populate documentNumber from licenceNumber if not already extracted
+    if (!result.documentNumber && result.licenceNumber) {
+      result.documentNumber = result.licenceNumber
     }
 
   } catch {
