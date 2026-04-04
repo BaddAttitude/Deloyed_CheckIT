@@ -113,21 +113,21 @@ if (fs.existsSync(MODEL_DEST)) {
   }
 }
 
-// ── 3. ArcFace R50 server model ───────────────────────────────────────────────
-// Used server-side via /api/face-match for ambiguous cases.
-// NOT served to the browser — stored in server-models/ (not public/).
+// ── 3. ArcFace R50 client model ───────────────────────────────────────────────
+// Served to the browser for client-side inference via /models/w600k_r50.onnx.
+// Loaded lazily — only fetched when an ambiguous case (0.25–0.75) is detected.
 
 const R50_ZIP  = "https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_m.zip"
 const R50_TMP  = "./tmp_buffalo_m.zip"
 const R50_DIR  = "./tmp_buffalo_m"
-const R50_DEST = "./server-models/w600k_r50.onnx"
+const R50_DEST = "./public/models/w600k_r50.onnx"
 
-console.log("\n── ArcFace R50 server model (~85 MB) ────────────────────────")
+console.log("\n── ArcFace R50 client model (~85 MB) ────────────────────────")
 
 if (fs.existsSync(R50_DEST)) {
   console.log("  w600k_r50.onnx already exists — skipping download")
 } else {
-  fs.mkdirSync("./server-models", { recursive: true })
+  fs.mkdirSync("./public/models", { recursive: true })
   console.log("  Downloading buffalo_m.zip from InsightFace GitHub releases…")
 
   try {
@@ -156,7 +156,7 @@ if (fs.existsSync(R50_DEST)) {
     if (!found) throw new Error("w600k_r50.onnx not found in archive")
 
     fs.copyFileSync(found, R50_DEST)
-    console.log("  w600k_r50.onnx → server-models/w600k_r50.onnx  done")
+    console.log("  w600k_r50.onnx → public/models/w600k_r50.onnx  done")
 
     fs.rmSync(R50_TMP, { force: true })
     fs.rmSync(R50_DIR, { recursive: true, force: true })

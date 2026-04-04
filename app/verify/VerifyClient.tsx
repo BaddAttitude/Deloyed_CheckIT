@@ -12,6 +12,7 @@ import {
   compareFaceDescriptors,
   MATCH_THRESHOLD,
 } from "@/lib/face-api-loader"
+import { computeR50DescriptorClient } from "@/lib/arcface-r50-loader"
 import type { PatternCheckResult } from "@/lib/id-pattern-verifier"
 import type { ExtractedIDData } from "@/lib/id-ocr"
 
@@ -94,25 +95,24 @@ export default function VerifyClient({ company, initialMode }: Props) {
       const clientDist = compareFaceDescriptors(faceDescriptorFromId, liveDescriptor)
       let finalDist    = clientDist
 
-      // ── Hybrid: escalate ambiguous cases to server-side ArcFace R50 ───────
+      // ── Hybrid: escalate ambiguous cases to client-side ArcFace R50 ────────
       // Confident pass  : clientDist < 0.25 (matchPct > 75%) → trust immediately
       // Confident fail  : clientDist > 0.75 (matchPct < 25%) → trust immediately
-      // Ambiguous zone  : 0.25–0.75 → R50 gives a more accurate answer
+      // Ambiguous zone  : 0.25–0.75 → R50 (85 MB, loaded lazily) gives a more
+      //                   accurate answer — cached after first download
       if (clientDist >= 0.25 && clientDist <= 0.75 && idFaceCrop && liveCrop) {
         setStatusMsg("Running advanced verification…")
         try {
-          const res = await fetch("/api/face-match", {
-            method : "POST",
-            headers: { "Content-Type": "application/json" },
-            body   : JSON.stringify({ idCrop: idFaceCrop, liveCrop }),
-          })
-          if (res.ok) {
-            const { distance } = await res.json() as { distance: number }
-            finalDist = distance
+          const [idDesc, liveDesc] = await Promise.all([
+            computeR50DescriptorClient(idFaceCrop),
+            computeR50DescriptorClient(liveCrop),
+          ])
+          if (idDesc && liveDesc) {
+            finalDist = compareFaceDescriptors(idDesc, liveDesc)
           }
-          // If server unavailable or errored, fall back to clientDist silently
+          // If R50 unavailable (low-end device / download failed) keep clientDist
         } catch {
-          // Network error — keep clientDist
+          // Keep clientDist
         }
       }
 

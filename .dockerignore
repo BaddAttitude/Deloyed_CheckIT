@@ -6,6 +6,7 @@ node_modules
 *.db-wal
 *.db-shm
 server-models
-public/models/*.onnx
+public/models/w600k_mbf.onnx
+public/models/w600k_r50.onnx
 .env*
 tmp_buffalo_*
