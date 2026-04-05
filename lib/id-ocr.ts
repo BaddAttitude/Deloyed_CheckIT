@@ -208,6 +208,18 @@ export async function extractIDData(imageSrc: string): Promise<ExtractedIDData> 
         }
       }
 
+      // Field 3 → Date of birth (and optional nationality after the date)
+      if (!result.dateOfBirth) {
+        const m = ul.match(/^3\s*[.]\s*(\d{1,2}[.\-\/]\d{1,2}[.\-\/]\d{4})/)
+        if (m) {
+          const d = parseDate(m[1])
+          if (d) result.dateOfBirth = fmt(d)
+          // Nationality may follow the date on the same line, e.g. "13.04.2005 NIGERIA"
+          const natM = ul.match(/^3\s*[.]\s*[\d.\-\/]+\s+([A-Z]{4,})/)
+          if (natM && !result.nationality) result.nationality = titleCase(natM[1])
+        }
+      }
+
       // Field 4d OR field 5 → Licence number (card version-dependent label)
       if (!result.licenceNumber) {
         const m = ul.match(/^(?:4D|5)\s*[.]\s*([A-Z]{5}[0-9]{6}[A-Z]{2}[0-9][A-Z]{2})/)

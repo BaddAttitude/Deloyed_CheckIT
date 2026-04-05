@@ -23,15 +23,13 @@ export default function CameraScanner({ mode, onCapture, instruction }: CameraSc
     if (!webcamRef.current || capturing) return
     setCapturing(true)
     const imageSrc = webcamRef.current.getScreenshot()
-    if (imageSrc) {
-      onCapture(imageSrc)
-    }
+    if (imageSrc) onCapture(imageSrc)
     setCapturing(false)
   }, [webcamRef, onCapture, capturing])
 
   return (
     <div className="flex flex-col items-center gap-4 w-full">
-      {/* Camera frame */}
+      {/* Camera viewport */}
       <div className="relative w-full max-w-sm rounded-2xl overflow-hidden border-2 border-[#3b82f6]/60 bg-black shadow-lg shadow-[#3b82f6]/10">
         <Webcam
           ref={webcamRef}
@@ -45,62 +43,76 @@ export default function CameraScanner({ mode, onCapture, instruction }: CameraSc
           mirrored={mode === "face"}
         />
 
-        {/* ── ID card overlay ── */}
+        {/* ── ID text-fields guide overlay ── */}
         {mode === "id" ? (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             {/*
-              UK DL is credit-card size: 85.6 × 54 mm → aspect ratio 1.586:1
-              We render the guide at 88% of the container width.
-              The box-shadow vignette darkens everything outside the card.
+              The reference image shows ONLY the text section of the UK DL —
+              wide landscape strip, 5 field rows, no photo area.
+              We match that shape: ~95% width, ~45% height.
             */}
             <div
-              className="relative border-2 border-[#3b82f6] rounded-lg"
+              className="relative rounded-sm border-2 border-[#3b82f6]"
               style={{
-                width:       "88%",
-                aspectRatio: "85.6 / 54",
-                boxShadow:   "0 0 0 9999px rgba(0,0,0,0.52)",
+                width:     "95%",
+                height:    "58%",
+                boxShadow: "0 0 0 9999px rgba(0,0,0,0.55)",
               }}
             >
               {/* Corner accents */}
               {[
-                "top-0 left-0 border-t-[3px] border-l-[3px] rounded-tl",
-                "top-0 right-0 border-t-[3px] border-r-[3px] rounded-tr",
-                "bottom-0 left-0 border-b-[3px] border-l-[3px] rounded-bl",
-                "bottom-0 right-0 border-b-[3px] border-r-[3px] rounded-br",
+                "top-0 left-0 border-t-[3px] border-l-[3px]",
+                "top-0 right-0 border-t-[3px] border-r-[3px]",
+                "bottom-0 left-0 border-b-[3px] border-l-[3px]",
+                "bottom-0 right-0 border-b-[3px] border-r-[3px]",
               ].map((cls, i) => (
-                <div key={i} className={`absolute w-5 h-5 border-[#3b82f6] ${cls}`} />
+                <div key={i} className={`absolute w-4 h-4 border-[#3b82f6] ${cls}`} />
               ))}
 
-              {/* Photo placeholder — left ~32% */}
-              <div className="absolute left-[3%] top-[7%] w-[29%] bottom-[7%] border border-[#3b82f6]/30 rounded-sm flex flex-col items-center justify-center gap-0.5">
-                <svg className="w-4 h-4 text-[#3b82f6]/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                    d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span className="text-[#3b82f6]/30 text-[6px] font-mono tracking-widest">PHOTO</span>
-              </div>
+              {/* 5 field rows — matching layout from the reference image */}
+              <div className="absolute inset-x-3 inset-y-2 flex flex-col justify-around">
 
-              {/* Field labels — right ~65% */}
-              <div className="absolute left-[35%] top-[7%] right-[3%] bottom-[7%] flex flex-col justify-around">
-                {[
-                  { num: "1.",  label: "Surname" },
-                  { num: "2.",  label: "Given names" },
-                  { num: "3.",  label: "Date of birth" },
-                  { num: "4a.", label: "Issue date" },
-                  { num: "4b.", label: "Expiry date" },
-                ].map(({ num, label }) => (
-                  <div key={num} className="flex items-center gap-1">
-                    <span className="text-[#3b82f6] text-[7px] font-mono font-bold flex-shrink-0">{num}</span>
-                    <div className="flex-1 border-b border-dashed border-[#3b82f6]/20" />
-                    <span className="text-[#3b82f6]/45 text-[6px] font-mono flex-shrink-0">{label}</span>
-                  </div>
-                ))}
+                {/* Row 1 — Surname */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[#3b82f6] text-[9px] font-mono font-bold w-5 flex-shrink-0">1.</span>
+                  <div className="flex-1 border-b border-dashed border-[#3b82f6]/35" />
+                  <span className="text-[#3b82f6]/40 text-[7px] font-mono flex-shrink-0">SURNAME</span>
+                </div>
+
+                {/* Row 2 — Given names */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[#3b82f6] text-[9px] font-mono font-bold w-5 flex-shrink-0">2.</span>
+                  <div className="flex-1 border-b border-dashed border-[#3b82f6]/35" />
+                  <span className="text-[#3b82f6]/40 text-[7px] font-mono flex-shrink-0">GIVEN NAMES</span>
+                </div>
+
+                {/* Row 3 — DOB + nationality */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[#3b82f6] text-[9px] font-mono font-bold w-5 flex-shrink-0">3.</span>
+                  <div className="flex-1 border-b border-dashed border-[#3b82f6]/35" />
+                  <span className="text-[#3b82f6]/40 text-[7px] font-mono flex-shrink-0">DD.MM.YYYY</span>
+                </div>
+
+                {/* Row 4a — Issue date */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[#3b82f6] text-[9px] font-mono font-bold w-5 flex-shrink-0">4a.</span>
+                  <div className="flex-1 border-b border-dashed border-[#3b82f6]/35" />
+                  <span className="text-[#3b82f6]/40 text-[7px] font-mono flex-shrink-0">ISSUE DATE</span>
+                </div>
+
+                {/* Row 4b — Expiry date */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[#3b82f6] text-[9px] font-mono font-bold w-5 flex-shrink-0">4b.</span>
+                  <div className="flex-1 border-b border-dashed border-[#3b82f6]/35" />
+                  <span className="text-[#3b82f6]/40 text-[7px] font-mono flex-shrink-0">EXPIRY DATE</span>
+                </div>
+
               </div>
 
               {/* Instruction above */}
               <div className="absolute -top-6 inset-x-0 text-center">
                 <span className="text-[11px] text-white/85 font-medium">
-                  Align full licence within the frame
+                  Fill the frame with the text fields only
                 </span>
               </div>
             </div>
@@ -115,14 +127,14 @@ export default function CameraScanner({ mode, onCapture, instruction }: CameraSc
           </div>
         )}
 
-        {/* Scanning animation line */}
+        {/* Scanning animation */}
         {ready && (
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className="h-0.5 bg-[#3b82f6]/60 animate-scan-line" />
           </div>
         )}
 
-        {/* Not ready overlay */}
+        {/* Camera loading overlay */}
         {!ready && (
           <div className="absolute inset-0 bg-[#0f172a]/80 flex items-center justify-center">
             <div className="text-center">
