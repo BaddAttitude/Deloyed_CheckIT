@@ -1,63 +1,56 @@
 import { NextRequest, NextResponse } from "next/server"
-import { spawn }                     from "child_process"
-import path                          from "path"
 
-// Force Node.js runtime — needs child_process / filesystem access
 export const runtime = "nodejs"
 
-function runPaddleOCR(base64: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const scriptPath = path.join(process.cwd(), "scripts", "paddle_ocr.py")
-
-    const py = spawn("python3", [scriptPath], {
-      timeout: 60_000,
-      env: { ...process.env, PYTHONUNBUFFERED: "1" },
-    })
-
-    let stdout = ""
-    let stderr = ""
-
-    py.stdout.on("data", (chunk: Buffer) => { stdout += chunk.toString() })
-    py.stderr.on("data", (chunk: Buffer) => { stderr += chunk.toString() })
-
-    // Send the raw base64 image to the Python script via stdin
-    py.stdin.write(base64)
-    py.stdin.end()
-
-    py.on("close", (code: number | null) => {
-      if (code !== 0) {
-        console.error("[OCR] python3 stderr:", stderr.slice(0, 500))
-        reject(new Error(`PaddleOCR exited with code ${code}`))
-        return
-      }
-      try {
-        const json = JSON.parse(stdout.trim()) as { text: string; error: string | null }
-        if (json.error) reject(new Error(json.error))
-        else            resolve(json.text ?? "")
-      } catch {
-        reject(new Error(`Could not parse PaddleOCR output: ${stdout.slice(0, 200)}`))
-      }
-    })
-
-    py.on("error", (err: Error) => reject(err))
-  })
-}
+const OCR_ENDPOINT = "https://api.ocr.space/parse/base64"
 
 export async function POST(req: NextRequest) {
   let imageData: string
   try {
-    const body  = await req.json()
-    imageData   = body.imageData
+    const body = await req.json()
+    imageData = body.imageData
     if (!imageData) throw new Error("missing imageData")
   } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
   }
 
   try {
-    // Strip the data URI prefix — Python only needs raw base64
-    const base64 = imageData.replace(/^data:image\/\w+;base64,/, "")
-    const text   = await runPaddleOCR(base64)
+    const base64Image = imageData.startsWith("data:")
+      ? imageData
+      : `data:image/jpeg;base64,${imageData}`
+
+    const params = new URLSearchParams({
+      base64Image,
+      language:          "eng",
+      OCREngine:         "2",
+      scale:             "true",
+      isOverlayRequired: "false",
+      detectOrientation: "true",
+    })
+
+    const res = await fetch(OCR_ENDPOINT, {
+      method:  "POST",
+      headers: {
+        apikey:         process.env.OCR_SPACE_KEY ?? "helloworld",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body:   params.toString(),
+      signal: AbortSignal.timeout(30_000),
+    })
+
+    if (!res.ok) throw new Error(`OCR.space responded with ${res.status}`)
+
+    const json = await res.json() as {
+      IsErroredOnProcessing: boolean
+      ErrorMessage?:         string[]
+      ParsedResults?:        Array<{ ParsedText: string }>
+    }
+
+    if (json.IsErroredOnProcessing) throw new Error(json.ErrorMessage?.[0] ?? "OCR failed")
+
+    const text = json.ParsedResults?.[0]?.ParsedText ?? ""
     return NextResponse.json({ text })
+
   } catch (err) {
     console.error("[OCR] error:", err)
     return NextResponse.json({ text: "", error: String(err) }, { status: 200 })
