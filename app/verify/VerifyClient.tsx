@@ -242,7 +242,7 @@ export default function VerifyClient({ company, initialMode }: Props) {
             <CameraScanner
               mode="id"
               onCapture={handleIdCapture}
-              instruction="Hold the licence flat and steady inside the frame"
+              instruction="Fill the strip with the text fields (right side of the card) — exclude the photo"
             />
           </div>
         )}

@@ -47,15 +47,15 @@ export default function CameraScanner({ mode, onCapture, instruction }: CameraSc
         {mode === "id" ? (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             {/*
-              The reference image shows ONLY the text section of the UK DL —
-              wide landscape strip, 5 field rows, no photo area.
-              We match that shape: ~95% width, ~45% height.
+              Matches the real UK DL text section layout:
+              1 & 2 spaced in top half, then a bigger gap,
+              then 3 / 4a / 4b clustered in the lower portion.
             */}
             <div
               className="relative rounded-sm border-2 border-[#3b82f6]"
               style={{
                 width:     "95%",
-                height:    "58%",
+                height:    "70%",
                 boxShadow: "0 0 0 9999px rgba(0,0,0,0.55)",
               }}
             >
@@ -69,50 +69,36 @@ export default function CameraScanner({ mode, onCapture, instruction }: CameraSc
                 <div key={i} className={`absolute w-4 h-4 border-[#3b82f6] ${cls}`} />
               ))}
 
-              {/* 5 field rows — matching layout from the reference image */}
-              <div className="absolute inset-x-3 inset-y-2 flex flex-col justify-around">
-
-                {/* Row 1 — Surname */}
-                <div className="flex items-center gap-2">
-                  <span className="text-[#3b82f6] text-[9px] font-mono font-bold w-5 flex-shrink-0">1.</span>
-                  <div className="flex-1 border-b border-dashed border-[#3b82f6]/35" />
-                  <span className="text-[#3b82f6]/40 text-[7px] font-mono flex-shrink-0">SURNAME</span>
+              {/*
+                Absolute-positioned rows matching real card proportions:
+                  1  → 13%
+                  2  → 28%
+                  3  → 52%
+                  4a → 65%
+                  4b → 78%
+              */}
+              {([
+                { top: "12%", num: "1.",  label: "SURNAME"     },
+                { top: "30%", num: "2.",  label: "GIVEN NAMES" },
+                { top: "55%", num: "3.",  label: "DD.MM.YYYY"  },
+                { top: "68%", num: "4a.", label: "ISSUE DATE"  },
+                { top: "79%", num: "4b.", label: "EXPIRY DATE" },
+              ] as const).map(({ top, num, label }) => (
+                <div
+                  key={num}
+                  className="absolute left-3 right-3 flex items-center gap-2"
+                  style={{ top, transform: "translateY(-50%)" }}
+                >
+                  <span className="text-[#3b82f6] text-[9px] font-mono font-bold w-5 flex-shrink-0">{num}</span>
+                  <div className="flex-1 border-b border-dashed border-[#3b82f6]/40" />
+                  <span className="text-[#3b82f6]/45 text-[7px] font-mono flex-shrink-0">{label}</span>
                 </div>
-
-                {/* Row 2 — Given names */}
-                <div className="flex items-center gap-2">
-                  <span className="text-[#3b82f6] text-[9px] font-mono font-bold w-5 flex-shrink-0">2.</span>
-                  <div className="flex-1 border-b border-dashed border-[#3b82f6]/35" />
-                  <span className="text-[#3b82f6]/40 text-[7px] font-mono flex-shrink-0">GIVEN NAMES</span>
-                </div>
-
-                {/* Row 3 — DOB + nationality */}
-                <div className="flex items-center gap-2">
-                  <span className="text-[#3b82f6] text-[9px] font-mono font-bold w-5 flex-shrink-0">3.</span>
-                  <div className="flex-1 border-b border-dashed border-[#3b82f6]/35" />
-                  <span className="text-[#3b82f6]/40 text-[7px] font-mono flex-shrink-0">DD.MM.YYYY</span>
-                </div>
-
-                {/* Row 4a — Issue date */}
-                <div className="flex items-center gap-2">
-                  <span className="text-[#3b82f6] text-[9px] font-mono font-bold w-5 flex-shrink-0">4a.</span>
-                  <div className="flex-1 border-b border-dashed border-[#3b82f6]/35" />
-                  <span className="text-[#3b82f6]/40 text-[7px] font-mono flex-shrink-0">ISSUE DATE</span>
-                </div>
-
-                {/* Row 4b — Expiry date */}
-                <div className="flex items-center gap-2">
-                  <span className="text-[#3b82f6] text-[9px] font-mono font-bold w-5 flex-shrink-0">4b.</span>
-                  <div className="flex-1 border-b border-dashed border-[#3b82f6]/35" />
-                  <span className="text-[#3b82f6]/40 text-[7px] font-mono flex-shrink-0">EXPIRY DATE</span>
-                </div>
-
-              </div>
+              ))}
 
               {/* Instruction above */}
               <div className="absolute -top-6 inset-x-0 text-center">
                 <span className="text-[11px] text-white/85 font-medium">
-                  Fill the frame with the text fields only
+                  Align text fields within the frame
                 </span>
               </div>
             </div>
