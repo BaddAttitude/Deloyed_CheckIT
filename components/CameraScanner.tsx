@@ -105,7 +105,7 @@ export default function CameraScanner({ mode, onCapture, instruction }: CameraSc
           </div>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-48 h-56 border-2 border-white/50 rounded-full">
+            <div className="relative w-[44%] aspect-[3/4] border-2 border-white/50 rounded-full">
               <div className="absolute inset-x-0 -bottom-7 text-center text-xs text-white/80">
                 Position face in oval
               </div>

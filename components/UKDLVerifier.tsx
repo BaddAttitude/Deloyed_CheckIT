@@ -283,11 +283,11 @@ export default function UKDLVerifier({ imageSrc, onComplete, onRetry }: Props) {
         <div className="w-full bg-[#1e293b] border border-[#334155] rounded-xl px-4 py-3 space-y-2">
           <p className="text-[#94a3b8] text-xs font-medium mb-1">Expected licence number</p>
           <div className="flex justify-between items-center gap-2">
-            <span className="text-[#475569] text-xs">Standard:</span>
+            <span className="text-[#475569] text-xs">Male:</span>
             <span className="text-white text-sm font-mono tracking-widest">{computed.expectedMale}</span>
           </div>
           <div className="flex justify-between items-center gap-2">
-            <span className="text-[#475569] text-xs">Female variant:</span>
+            <span className="text-[#475569] text-xs">Female:</span>
             <span className="text-white text-sm font-mono tracking-widest">{computed.expectedFemale}</span>
           </div>
         </div>

@@ -4,7 +4,6 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { signOut } from "@/lib/auth"
-import ScanDropdown from "@/components/ScanDropdown"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -31,14 +30,23 @@ export default async function DashboardPage() {
           {/* Left: logo + company */}
           <div className="flex items-center gap-2.5 min-w-0">
             <Image src="/CheckIt_logo.png" alt="CheckIt" width={88} height={30} style={{ width: 88, height: "auto" }} className="object-contain flex-shrink-0" />
-            <div className="text-[#94a3b8] text-xs border-l border-[#334155] pl-2.5 truncate max-w-[120px] sm:max-w-none">
+            <div className="text-[#94a3b8] text-xs border-l border-[#334155] pl-2.5 truncate flex-1 min-w-0">
               {company}
             </div>
           </div>
 
           {/* Right: scan + sign out */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <ScanDropdown />
+            <Link
+              href="/verify"
+              className="flex items-center gap-1.5 bg-[#3b82f6] hover:bg-[#2563eb] text-white font-semibold px-3 py-2 rounded-lg transition-colors"
+            >
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span className="text-sm">New Scan</span>
+            </Link>
             <form
               action={async () => {
                 "use server"
@@ -140,7 +148,7 @@ export default async function DashboardPage() {
                     <div className="text-white text-sm font-medium capitalize truncate">
                       {v.idType}
                     </div>
-                    <div className="text-[#94a3b8] text-xs capitalize">
+                    <div className="text-[#94a3b8] text-xs capitalize truncate">
                       {v.scanMode} scan ·{" "}
                       {new Date(v.createdAt).toLocaleDateString("en-GB", {
                         day: "numeric",

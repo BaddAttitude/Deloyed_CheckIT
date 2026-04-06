@@ -7,6 +7,7 @@ import IDFaceScanner from "@/components/IDFaceScanner"
 import FaceScanner from "@/components/FaceScanner"
 import UKDLVerifier from "@/components/UKDLVerifier"
 import VerificationResult from "@/components/VerificationResult"
+import UVReferenceCheck from "@/components/UVReferenceCheck"
 import {
   compareFaceDescriptors,
   MATCH_THRESHOLD,
@@ -14,7 +15,7 @@ import {
 import type { PatternCheckResult } from "@/lib/check-types"
 import type { ExtractedIDData } from "@/lib/id-ocr"
 
-type Step = "setup" | "id-scan" | "dl-verify" | "id-face-scan" | "face-scan" | "result"
+type Step = "setup" | "id-scan" | "dl-verify" | "id-face-scan" | "face-scan" | "result" | "uv-check"
 
 interface Props {
   company: string
@@ -138,11 +139,12 @@ export default function VerifyClient({ company, initialMode }: Props) {
     "id-face-scan": 1,
     "face-scan": 2,
     result: 3,
+    "uv-check": 0,
   }
   const totalSteps = 2
 
   return (
-    <div className="min-h-full bg-[#0f172a] flex flex-col">
+    <div className="min-h-full bg-[#0f172a] flex flex-col overflow-x-hidden">
       {/* Header */}
       <header className="bg-[#1e293b] border-b border-[#334155] px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -200,6 +202,23 @@ export default function VerifyClient({ company, initialMode }: Props) {
                 <div>
                   <div className="text-white font-semibold text-sm">Single Scan</div>
                   <div className="text-[#94a3b8] text-xs mt-0.5">Scan UK Driving Licence — algorithm verification</div>
+                </div>
+              </button>
+
+              {/* UV Check tab — under Single Scan */}
+              <button
+                onClick={() => setStep("uv-check")}
+                className="w-full flex items-start gap-4 bg-[#0f0a1e] border border-[#7c3aed]/40 hover:border-[#7c3aed]/80 rounded-2xl p-4 transition-colors text-left"
+              >
+                <div className="w-10 h-10 bg-[#7c3aed]/20 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-5 h-5 text-[#a78bfa]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.347.347a3.5 3.5 0 01-4.95 0l-.347-.347z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-[#a78bfa] font-semibold text-sm">UV Check</div>
+                  <div className="text-[#94a3b8] text-xs mt-0.5">View genuine UV security patterns — front &amp; back</div>
                 </div>
               </button>
 
@@ -323,9 +342,14 @@ export default function VerifyClient({ company, initialMode }: Props) {
           </div>
         )}
 
+        {/* ── UV Reference Check ── */}
+        {step === "uv-check" && (
+          <UVReferenceCheck onClose={() => setStep("setup")} />
+        )}
+
         {/* ── Result ── */}
         {step === "result" && result && (
-          <div className="w-full max-w-sm mt-6">
+          <div className="w-full max-w-sm mt-6 pb-8">
             <VerificationResult
               result={result}
               idType={idType}

@@ -24,6 +24,14 @@ body {
   background-color: #0f172a;
   color: #ffffff;
   -webkit-font-smoothing: antialiased;
+  /* Ensure page scrolls on iOS Safari */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent double-tap zoom on interactive elements */
+button, a {
+  touch-action: manipulation;
 }
 
 /* Scan line animation for camera overlay */
