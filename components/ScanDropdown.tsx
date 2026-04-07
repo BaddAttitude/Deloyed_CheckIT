@@ -59,7 +59,7 @@ export default function ScanDropdown() {
               </svg>
             </div>
             <div>
-              <div className="text-white text-sm font-semibold">Single Scan</div>
+              <div className="text-white text-sm font-semibold">ID Scan</div>
               <div className="text-[#94a3b8] text-xs">ID document only</div>
             </div>
           </button>
@@ -76,7 +76,7 @@ export default function ScanDropdown() {
               </svg>
             </div>
             <div>
-              <div className="text-white text-sm font-semibold">Two Scan</div>
+              <div className="text-white text-sm font-semibold">Biometric Scan</div>
               <div className="text-[#94a3b8] text-xs">ID + live face match</div>
             </div>
           </button>

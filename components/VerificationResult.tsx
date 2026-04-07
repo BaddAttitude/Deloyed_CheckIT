@@ -258,7 +258,7 @@ export default function VerificationResult({
           <div className="px-4 py-3 flex items-center justify-between">
             <span className="text-[#94a3b8] text-xs">Verification Mode</span>
             <span className="text-white text-sm font-medium">
-              {scanMode === "one" ? "One Scan" : "Two Scan (Biometric)"}
+              {scanMode === "one" ? "ID Scan" : "Biometric Scan"}
             </span>
           </div>
           <div className="px-4 py-3 flex items-center justify-between">

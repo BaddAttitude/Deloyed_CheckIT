@@ -149,7 +149,7 @@ export default async function DashboardPage() {
                       {v.idType}
                     </div>
                     <div className="text-[#94a3b8] text-xs capitalize truncate">
-                      {v.scanMode} scan ·{" "}
+                      {v.scanMode === "one" ? "ID Scan" : "Biometric Scan"} ·{" "}
                       {new Date(v.createdAt).toLocaleDateString("en-GB", {
                         day: "numeric",
                         month: "short",

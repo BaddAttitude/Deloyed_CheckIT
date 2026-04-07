@@ -200,7 +200,7 @@ export default function VerifyClient({ company, initialMode }: Props) {
                   </svg>
                 </div>
                 <div>
-                  <div className="text-white font-semibold text-sm">Single Scan</div>
+                  <div className="text-white font-semibold text-sm">ID Scan</div>
                   <div className="text-[#94a3b8] text-xs mt-0.5">Scan UK Driving Licence — algorithm verification</div>
                 </div>
               </button>
@@ -234,7 +234,7 @@ export default function VerifyClient({ company, initialMode }: Props) {
                   </svg>
                 </div>
                 <div>
-                  <div className="text-white font-semibold text-sm">Two Scan</div>
+                  <div className="text-white font-semibold text-sm">Biometric Scan</div>
                   <div className="text-[#94a3b8] text-xs mt-0.5">ID photo + live face — biometric match</div>
                 </div>
               </button>
