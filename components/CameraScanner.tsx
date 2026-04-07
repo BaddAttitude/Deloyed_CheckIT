@@ -55,7 +55,7 @@ export default function CameraScanner({ mode, onCapture, instruction }: CameraSc
               className="relative rounded-sm border-2 border-[#3b82f6]"
               style={{
                 width:     "95%",
-                height:    "70%",
+                height:    "72%",
                 boxShadow: "0 0 0 9999px rgba(0,0,0,0.55)",
               }}
             >
@@ -78,15 +78,15 @@ export default function CameraScanner({ mode, onCapture, instruction }: CameraSc
                   4b → 78%
               */}
               {([
-                { top: "12%", num: "1.",  label: "SURNAME"     },
-                { top: "30%", num: "2.",  label: "GIVEN NAMES" },
-                { top: "55%", num: "3.",  label: "DD.MM.YYYY"  },
-                { top: "68%", num: "4a.", label: "ISSUE DATE"  },
-                { top: "79%", num: "4b.", label: "EXPIRY DATE" },
+                { top: "10%", num: "1.",  label: "SURNAME"     },
+                { top: "25%", num: "2.",  label: "GIVEN NAMES" },
+                { top: "46%", num: "3.",  label: "DD.MM.YYYY"  },
+                { top: "58%", num: "4a.", label: "ISSUE DATE"  },
+                { top: "70%", num: "4b.", label: "EXPIRY DATE" },
               ] as const).map(({ top, num, label }) => (
                 <div
                   key={num}
-                  className="absolute left-3 right-3 flex items-center gap-2"
+                  className="absolute left-8 right-3 flex items-center gap-2"
                   style={{ top, transform: "translateY(-50%)" }}
                 >
                   <span className="text-[#3b82f6] text-[9px] font-mono font-bold w-5 flex-shrink-0">{num}</span>

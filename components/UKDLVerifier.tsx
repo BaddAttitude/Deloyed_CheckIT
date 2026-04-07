@@ -22,6 +22,16 @@ type Stage = "ocr" | "review" | "algorithm" | "done"
 interface ComputedData {
   expectedMale:   string
   expectedFemale: string
+  hologram:       string
+}
+
+function formatHologram(expiryDate: string | null | undefined): string {
+  if (!expiryDate) return "—"
+  // expiryDate is stored as "14 Aug 2034" (en-GB locale from fmt())
+  const parts = expiryDate.trim().split(/\s+/)
+  if (parts.length !== 3) return "—"
+  const [, mon, yyyy] = parts
+  return `${mon.toUpperCase().slice(0, 3)} ${yyyy.slice(-2)}`
 }
 
 // ── Field row in the review screen ───────────────────────────────────────────
@@ -127,7 +137,7 @@ export default function UKDLVerifier({ imageSrc, onComplete, onRetry }: Props) {
             finalScore      = algorithmPassed
               ? 100
               : Math.round((checks.filter(c => c.id !== "algorithm" && c.passed).length / REQUIRED) * 100)
-            computedData = { expectedMale: dlResult.male, expectedFemale: dlResult.female }
+            computedData = { expectedMale: dlResult.male, expectedFemale: dlResult.female, hologram: formatHologram(ocr.expiryDate) }
             checks.push({ id: "algorithm", name: "Algorithm computed", passed: true,
               detail: `${dlResult.male} (standard) · ${dlResult.female} (female variant)`, weight: 0 })
           } catch (e) {
@@ -289,6 +299,10 @@ export default function UKDLVerifier({ imageSrc, onComplete, onRetry }: Props) {
           <div className="flex justify-between items-center gap-2">
             <span className="text-[#475569] text-xs">Female:</span>
             <span className="text-white text-sm font-mono tracking-widest">{computed.expectedFemale}</span>
+          </div>
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-[#475569] text-xs">Hologram:</span>
+            <span className="text-[#a855f7] text-sm font-mono tracking-widest">{computed.hologram}</span>
           </div>
         </div>
       )}
