@@ -32,8 +32,8 @@ export default function LandingPage() {
           Secure.
         </h1>
 
-        <p className="text-[#94a3b8] text-base sm:text-lg max-w-sm sm:max-w-xl mb-8">
-          CheckIt empowers security teams to verify IDs in seconds — with optional
+        <p className="text-[#94a3b8] text-base sm:text-lg max-w-sm sm:max-w-xl mb-8 text-center">
+          CheckIt empowers security teams to verify IDs in seconds with optional
           face biometric matching for maximum confidence.
         </p>
 
@@ -42,7 +42,7 @@ export default function LandingPage() {
             href="/signup"
             className="bg-[#3b82f6] hover:bg-[#2563eb] text-white font-semibold px-8 py-4 rounded-xl transition-colors text-center"
           >
-            Start Verifying Free
+            Get Started
           </Link>
           <Link
             href="/login"
@@ -57,7 +57,7 @@ export default function LandingPage() {
       <section className="px-4 sm:px-6 py-10 sm:py-16 border-t border-[#1e293b]">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-xl sm:text-2xl font-bold text-center text-white mb-6 sm:mb-10">
-            Two modes. Total control.
+            ID Verification and Biometric Verification<br />with Confidence
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* One Scan Card */}
@@ -68,7 +68,7 @@ export default function LandingPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
-              <h3 className="text-white font-bold text-base mb-1.5">One Scan</h3>
+              <h3 className="text-white font-bold text-base mb-1.5">ID Scan</h3>
               <p className="text-[#94a3b8] text-sm leading-relaxed">
                 Quick ID scan and validation. Perfect for fast-paced environments
                 where speed matters.
@@ -83,15 +83,12 @@ export default function LandingPage() {
 
             {/* Two Scan Card */}
             <div className="bg-[#1e293b] border border-[#3b82f6]/40 rounded-2xl p-5 relative overflow-hidden">
-              <div className="absolute top-3 right-3 bg-[#3b82f6] text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                Recommended
-              </div>
-              <div className="w-11 h-11 bg-[#3b82f6]/20 rounded-xl flex items-center justify-center mb-3">
+<div className="w-11 h-11 bg-[#3b82f6]/20 rounded-xl flex items-center justify-center mb-3">
                 <svg className="w-5 h-5 text-[#3b82f6]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
-              <h3 className="text-white font-bold text-base mb-1.5">Two Scan</h3>
+              <h3 className="text-white font-bold text-base mb-1.5">Biometric Scan</h3>
               <p className="text-[#94a3b8] text-sm leading-relaxed">
                 Biometric-grade verification. Scans the ID then performs a live
                 face comparison.
@@ -115,9 +112,9 @@ export default function LandingPage() {
       <section className="bg-[#1e293b] border-t border-[#334155] px-4 sm:px-6 py-8">
         <div className="max-w-4xl mx-auto grid grid-cols-3 gap-3 text-center">
           {[
-            { value: "< 3s", label: "Avg. verify time" },
+            { value: "< 20s", label: "Avg. verify time" },
             { value: "99.2%", label: "Accuracy" },
-            { value: "100%", label: "Client-side" },
+            { value: "100%", label: "Confidence" },
           ].map((stat) => (
             <div key={stat.label}>
               <div className="text-xl sm:text-2xl font-extrabold text-[#3b82f6]">{stat.value}</div>
