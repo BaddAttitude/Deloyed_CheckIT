@@ -96,6 +96,12 @@ export default function IDPatternVerifier({ imageSrc, onComplete, onRetry }: Pro
         if (current >= s) clearInterval(timer)
       }, 40)
 
+      // Auto-proceed after 1.8s if passed
+      if (passed) {
+        setTimeout(() => {
+          if (!cancelled) onComplete(true, s, collected, ocrDataRef.current)
+        }, 1800)
+      }
     }
 
     run()
@@ -403,14 +409,12 @@ export default function IDPatternVerifier({ imageSrc, onComplete, onRetry }: Pro
         </div>
       )}
 
-      {/* Done button on pass */}
+      {/* Auto-proceed hint on pass */}
       {finalPassed === true && (
-        <button
-          onClick={() => onComplete(true, score!, rows.map(r => r.result), ocrDataRef.current)}
-          className="w-full bg-[#3b82f6] hover:bg-[#2563eb] text-white font-semibold py-3 rounded-xl transition-colors"
-        >
-          Done
-        </button>
+        <div className="flex items-center justify-center gap-2 text-xs text-[#94a3b8]">
+          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+          Proceeding automatically…
+        </div>
       )}
     </div>
   )
