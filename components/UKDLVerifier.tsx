@@ -66,12 +66,13 @@ function FieldRow({
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function UKDLVerifier({ imageSrc, onComplete, onRetry }: Props) {
-  const [stage,    setStage]    = useState<Stage>("ocr")
-  const [ocrData,  setOcrData]  = useState<ExtractedIDData | null>(null)
-  const [passed,   setPassed]   = useState(false)
-  const [score,    setScore]    = useState(0)
-  const [computed, setComputed] = useState<ComputedData | null>(null)
-  const [error,    setError]    = useState("")
+  const [stage,         setStage]         = useState<Stage>("ocr")
+  const [ocrData,       setOcrData]       = useState<ExtractedIDData | null>(null)
+  const [passed,        setPassed]        = useState(false)
+  const [score,         setScore]         = useState(0)
+  const [computed,      setComputed]      = useState<ComputedData | null>(null)
+  const [error,         setError]         = useState("")
+  const [pendingChecks, setPendingChecks] = useState<PatternCheckResult[]>([])
 
   // ── Step 1: OCR ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -156,10 +157,8 @@ export default function UKDLVerifier({ imageSrc, onComplete, onRetry }: Props) {
         setPassed(algorithmPassed)
         setScore(finalScore)
         setComputed(computedData)
+        setPendingChecks(checks)
         setStage("done")
-
-        await new Promise(r => setTimeout(r, 1800))
-        if (!cancelled) onComplete(algorithmPassed, finalScore, checks, ocr)
 
       } catch (err) {
         if (cancelled) return
@@ -307,7 +306,12 @@ export default function UKDLVerifier({ imageSrc, onComplete, onRetry }: Props) {
         </div>
       )}
 
-      <p className="text-[#475569] text-xs">Proceeding to result…</p>
+      <button
+        onClick={() => onComplete(passed, score, pendingChecks, ocrData)}
+        className="w-full bg-[#3b82f6] hover:bg-[#2563eb] text-white font-semibold py-3 rounded-xl transition-colors"
+      >
+        Done
+      </button>
     </div>
   )
 }
